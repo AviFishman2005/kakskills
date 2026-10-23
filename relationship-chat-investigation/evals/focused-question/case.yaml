@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: focused-question
+expected_outcome: |
+  A direct, evidence-backed answer to the single question (roughly when the chasing flipped, with dated
+  quotes from the chat), without running the full multi-agent pipeline, plus a one-line offer of the full
+  investigation.
+context:
+  scaffold_script: place-files.sh

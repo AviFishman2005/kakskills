@@ -1,0 +1,840 @@
+<title>הקופסה השחורה</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: an incident investigation file on graph paper. The verdict (relationship analysis) leads; the case file (readers → planner → investigators) follows as a numbered spine. */
+:root{
+  --paper:#ECEFEE; --panel:#F8FAF9; --ink:#14191B; --muted:#596366; --rule:#CBD2D2; --grid:rgba(20,25,27,.045);
+  --hot:#D4520E; --hot-soft:rgba(212,82,14,.12); --cool:#2A5E82; --cool-soft:rgba(42,94,130,.12); --ok:#2E7A4E;
+  --display:"Karantina","Secular One","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans Hebrew","Assistant","Arial Hebrew",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#101416; --panel:#181D20; --ink:#E4E8E7; --muted:#8C979A; --rule:#2A3236; --grid:rgba(228,232,231,.035);
+  --hot:#FF7C38; --hot-soft:rgba(255,124,56,.14); --cool:#7DB2D8; --cool-soft:rgba(125,178,216,.14); --ok:#6BC493; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#101416; --panel:#181D20; --ink:#E4E8E7; --muted:#8C979A; --rule:#2A3236; --grid:rgba(228,232,231,.035);
+  --hot:#FF7C38; --hot-soft:rgba(255,124,56,.14); --cool:#7DB2D8; --cool-soft:rgba(125,178,216,.14); --ok:#6BC493; color-scheme:dark }
+
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 72px;display:flex;flex-direction:column;gap:22px}
+.strip{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em;flex-wrap:wrap}
+.rec{width:9px;height:9px;border-radius:50%;background:var(--hot);box-shadow:0 0 0 3px var(--hot-soft)}
+.running .rec{animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.running .rec,[data-s="run"] .dot{animation:none}}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(60px,12vw,112px);line-height:.82;margin:10px 0 6px;text-wrap:balance}
+.lede{max-width:58ch;margin:0;color:var(--muted);font-size:16px}
+
+.load{background:var(--panel);border:1.5px dashed var(--rule);padding:18px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s,background .15s}
+.load.over{border-color:var(--hot);background:var(--hot-soft)}
+.load h2{font-family:var(--display);font-size:32px;line-height:1;margin:0;font-weight:700}
+.load p{margin:0;color:var(--muted);font-size:14px}
+input[type=file]{font:inherit;font-size:14px;color:var(--muted);max-width:100%;cursor:pointer}
+input[type=file]::file-selector-button{font:inherit;font-family:var(--display);font-size:26px;font-weight:700;line-height:1.1;background:var(--ink);color:var(--paper);border:0;padding:6px 22px;margin-inline-end:12px;cursor:pointer;border-radius:2px}
+input[type=file]:focus-visible{outline:2px solid var(--hot);outline-offset:3px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:500;font-size:14px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:9px 15px;cursor:pointer;border-radius:2px;line-height:1.3}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+button.ghost:hover{border-color:var(--ink)}
+button.hot{background:var(--hot);border-color:var(--hot);color:#fff;font-family:var(--display);font-size:28px;font-weight:700;padding:4px 24px}
+button.link{background:none;border:0;padding:0;color:var(--cool);text-decoration:underline;font-size:13px}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+textarea,input[type=text]{width:100%;box-sizing:border-box;font:inherit;background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:9px 10px;border-radius:2px}
+textarea.code{font:13px/1.5 var(--mono);direction:ltr;resize:vertical}
+details summary{cursor:pointer;color:var(--muted);font-size:14px}
+.how{font-size:13.5px;color:var(--muted);border-top:1px solid var(--rule);padding-top:10px}
+.how ol{margin:4px 0 6px;padding-inline-start:18px}
+.err{color:var(--hot);font-size:14px;margin:0}
+
+.id{border-block:1px solid var(--ink);padding-block:12px;display:flex;flex-direction:column;gap:4px}
+.who{display:flex;gap:6px 14px;align-items:baseline;flex-wrap:wrap;font-size:16px}
+.who b{font-family:var(--display);font-size:30px;font-weight:700;line-height:1}
+.who .vs{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.meta{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.oneline{font-size:15px;margin:2px 0 0;max-width:62ch}
+.oneline:empty{display:none}
+.unsure{font-size:13px;color:var(--hot)}
+.note{background:var(--hot-soft);border-inline-start:3px solid var(--hot);padding:8px 12px;font-size:14px;margin:0}
+.run{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.est{font-size:13px;color:var(--muted)}
+
+.report{background:var(--panel);border:1px solid var(--ink);padding:22px}
+.rh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.rh h2{font-family:var(--display);font-weight:700;font-size:44px;line-height:.95;margin:0}
+.empty{color:var(--muted);font-size:14.5px;max-width:60ch}
+.empty ul{margin:6px 0 0;padding-inline-start:18px}
+
+.casehead{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;margin:6px 0 0}
+.pipe{display:flex;flex-direction:column}
+.stage{position:relative;padding-inline-start:34px;padding-bottom:26px}
+.stage::before{content:"";position:absolute;inset-inline-start:9px;top:22px;bottom:0;width:2px;background:var(--rule)}
+.stage:last-child::before{display:none}
+.node{position:absolute;inset-inline-start:0;top:4px;width:20px;height:20px;border:2px solid var(--ink);background:var(--paper);border-radius:50%;box-sizing:border-box;display:grid;place-items:center;font:600 10px var(--mono)}
+.stage.done .node{background:var(--ink);color:var(--paper)}
+.stage.active .node{border-color:var(--hot);color:var(--hot)}
+.sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.sh h3{font-family:var(--display);font-weight:700;font-size:32px;line-height:1;margin:0}
+.sh .k{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.sdesc{margin:0 0 12px;color:var(--muted);font-size:14px;max-width:62ch}
+
+.periods{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{font:12px var(--mono);border:1px solid var(--rule);padding:4px 8px;background:var(--panel);display:flex;gap:6px;align-items:center;font-variant-numeric:tabular-nums}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--rule);flex:none}
+[data-s="run"] .dot{background:var(--hot);animation:blink 1s infinite}
+[data-s="done"] .dot{background:var(--ok)}
+[data-s="err"] .dot{background:transparent;border:1.5px solid var(--hot)}
+[data-s="err"]{cursor:pointer}
+.digest{margin-top:10px}
+.digest .out{font-size:14px}
+
+.qs{display:flex;flex-direction:column;gap:10px}
+.q{background:var(--panel);border:1px solid var(--rule);padding:14px}
+.q[data-s="run"]{border-color:var(--hot)}
+.qh{display:flex;gap:10px;align-items:flex-start}
+.qh input{margin-top:6px;width:17px;height:17px;accent-color:var(--hot);flex:none}
+.qt{flex:1;min-width:0;font-size:17px;font-weight:500;line-height:1.45}
+.tag{font:11px var(--mono);color:var(--cool);border:1px solid var(--cool);padding:0 5px;margin-inline-start:6px;vertical-align:2px;white-space:nowrap}
+.why{font-size:13px;color:var(--muted);margin:4px 27px 0 0}
+.qst{font:12px var(--mono);color:var(--muted);margin-top:4px}
+.qbody{margin-top:10px;border-top:1px solid var(--rule);padding-top:10px}
+.qbody:empty{display:none}
+.toyou{background:var(--cool-soft);border-inline-start:3px solid var(--cool);padding:10px 12px;margin-top:10px}
+.toyou b{display:block;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--cool);letter-spacing:.05em;margin-bottom:2px}
+.toyou p{margin:0 0 8px;font-weight:500}
+.toyou textarea{min-height:52px;resize:vertical;background:var(--panel)}
+.addq{display:flex;gap:8px}
+
+.out{max-width:68ch;font-size:15.5px;line-height:1.75;overflow-wrap:anywhere}
+.out h3{font-family:var(--display);font-weight:700;font-size:27px;line-height:1.1;margin:18px 0 4px}
+.out h3:first-child{margin-top:0}
+.out p{margin:0 0 10px}
+.out blockquote{margin:8px 0 6px;padding:4px 12px;border-inline-start:3px solid var(--hot);background:var(--hot-soft);font-size:14.5px}
+.out ul,.out ol{margin:0 0 10px;padding-inline-start:20px}
+.out code{font-family:var(--mono);font-size:13px}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap" dir="rtl" id="wrap">
+  <header>
+    <div class="strip"><span class="rec" aria-hidden="true"></span><span>חקירת קשר</span><span>/</span><span id="srcLabel">צ׳אט לדוגמה</span></div>
+    <h1>הקופסה השחורה</h1>
+    <p class="lede">מעלים את הצ׳אט, וצוות של סוכני Claude קורא אותו מההודעה הראשונה עד האחרונה, מנסח את השאלות הקשות שהקשר הזה מעלה, חוקר אותן, וכותב ניתוח של מה שקרה ביניכם.</p>
+  </header>
+
+  <section class="load" id="drop" aria-label="העלאת צ׳אט">
+    <h2>העלה את הצ׳אט</h2>
+    <input id="file" type="file" aria-label="בחר קובץ ייצוא של צ׳אט">
+    <p>ייצוא מוואטסאפ (‎.txt‎ או ‎.zip‎) או ‎result.json‎ מטלגרם. אפשר גם לגרור את הקובץ לכאן.</p>
+    <p class="err" id="err" hidden></p>
+    <div class="how">
+      <b>ייצוא מוואטסאפ, ללא מדיה:</b>
+      <ol>
+        <li>אנדרואיד: בתוך הצ׳אט ⋮ ← עוד ← ייצוא צ׳אט ← ללא מדיה ← שמירה בקבצים.</li>
+        <li>אייפון: לוחצים על השם למעלה ← ייצוא צ׳אט ← ללא מדיה ← שמירה בקבצים.</li>
+      </ol>
+      הקובץ נקרא בתוך הדפדפן ולא נשמר. בזמן החקירה נשלחים ל־Claude קטעים מהצ׳אט כדי לנתח אותם.
+    </div>
+    <details>
+      <summary>אם הכפתור לא פותח קבצים אצלך: הדבק את הטקסט</summary>
+      <p style="margin:6px 0">פתח את קובץ ה־‎.txt‎, סמן הכול, העתק והדבק כאן.</p>
+      <textarea class="code" id="paste" rows="5" placeholder="[23/10/2026, 14:14:05] Name: message"></textarea>
+      <div class="btnrow" style="margin-top:6px"><button id="pasteGo" class="ghost" type="button">טען את הטקסט</button><button id="reset" class="ghost" type="button" hidden>חזור לצ׳אט הדוגמה</button></div>
+    </details>
+  </section>
+
+  <div class="id">
+    <div class="who"><span class="vs">אתה</span><b id="nMe"></b><span class="vs">מול</span><b id="nOther"></b><button class="link" id="swap" type="button">זה הפוך</button></div>
+    <span class="unsure" id="unsure" hidden>לא הצלחתי לזהות מהקובץ מי מהשניים אתה. אם זה הפוך, לחץ ״זה הפוך״ לפני שמתחילים.</span>
+    <span class="meta" id="meta"></span>
+    <p class="oneline" id="oneline"></p>
+  </div>
+  <p class="note" id="sampleNote">טעון צ׳אט לדוגמה בין שתי דמויות בדויות. אפשר להריץ עליו חקירה כדי לראות איך זה עובד, או להעלות את שלך.</p>
+  <p class="note" id="noSample" hidden>החקירה רצה על Claude, ולכן עובדת רק כשהעמוד פתוח בתוך Claude.</p>
+
+  <div class="run">
+    <button class="hot" id="go" type="button">פתח חקירה</button>
+    <button class="ghost" id="stop" type="button" hidden>עצור</button>
+    <span class="est" id="est"></span>
+  </div>
+
+  <section class="report" aria-labelledby="rtitle">
+    <div class="rh"><h2 id="rtitle">ניתוח הקשר</h2><span class="status" id="rstat"></span></div>
+    <div class="out" id="report"></div>
+    <div class="empty" id="rempty">
+      כאן ייכתב הניתוח, אחרי שכל הסוכנים יסיימו. הוא יכלול:
+      <ul>
+        <li>איך הקשר התפתח, בפרקים לפי ציר הזמן</li>
+        <li>הדינמיקה ביניכם: מי רדף, מי נסוג, מי החזיק את הקשר</li>
+        <li>על מה באמת רבתם, ומה כל אחד היה צריך ולא קיבל</li>
+        <li>הרגע שזה התחיל להישבר, ומה לא נאמר אף פעם</li>
+        <li>החלק שלך, ומה לקחת לקשר הבא</li>
+      </ul>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="ghost" id="synthGo" type="button" hidden>כתוב את הניתוח מחדש</button>
+      <button class="ghost" id="copy" type="button" hidden>העתק את הניתוח</button>
+    </div>
+  </section>
+
+  <h2 class="casehead">תיק החקירה</h2>
+  <div class="pipe">
+    <section class="stage" id="st1">
+      <span class="node">1</span>
+      <div class="sh"><h3>הקוראים</h3><span class="k" id="k1"></span></div>
+      <p class="sdesc">הצ׳אט מחולק לתקופות, וסוכן נפרד קורא כל תקופה. כל קורא רושם אירועים, ויכוחים, צרכים, סימני אזהרה ומה שלא נאמר, ומזהה איך אתם קוראים אחד לשני.</p>
+      <div class="periods" id="periods"></div>
+      <details class="digest" id="digestBox" hidden><summary>מה הקוראים מצאו</summary><div class="out" id="digest"></div></details>
+    </section>
+
+    <section class="stage" id="st2">
+      <span class="node">2</span>
+      <div class="sh"><h3>השאלות</h3><span class="k" id="k2"></span></div>
+      <p class="sdesc">סוכן מתכנן קורא את הממצאים ומנסח שאלות שספציפיות לקשר הזה. שלוש שאלות קבועות נשאלות תמיד. אפשר להוסיף שאלות משלך.</p>
+      <div class="qs" id="qs"></div>
+      <div class="addq" style="margin-top:10px">
+        <input type="text" id="newq" placeholder="שאלה משלך, למשל: ניסיתי לשנות אותה?">
+        <button class="ghost" id="addq" type="button">הוסף</button>
+      </div>
+    </section>
+
+    <section class="stage" id="st3">
+      <span class="node">3</span>
+      <div class="sh"><h3>החוקרים</h3><span class="k" id="k3"></span></div>
+      <p class="sdesc">כל שאלה מקבלת חוקר משלה. החוקר מחפש בצ׳אט המלא, מביא ציטוטים עם תאריך, ומחזיר אליך שאלה אחת. מה שתענה נכנס לניתוח כשתלחץ ״כתוב את הניתוח מחדש״. התשובות מופיעות בכרטיסי השאלות למעלה.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MIN = 60e3, DAY = 864e5;
+const nf = new Intl.NumberFormat('he-IL');
+
+/* ---------- parsing ---------- */
+const CLEAN = /[‎‏‪-‮⁦-⁩﻿]/g;
+const DT = String.raw`(\d{1,4})[.\/-](\d{1,2})[.\/-](\d{1,4}),?\s+(?:בשעה\s+|at\s+)?(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*([AaPp]\.?\s?[Mm]\.?)?`;
+const RE_IOS = new RegExp(String.raw`^\[` + DT + String.raw`\]\s*(.*)$`);
+const RE_AND = new RegExp('^' + DT + String.raw`\s*[-–]\s(.*)$`);
+const RE_MEDIA = /<media omitted>|<המדיה לא נכללה>|\bomitted\b|הושמט|לא נכלל|<attached:|^\s*null\s*$/i;
+const RE_EDIT = /\s*<(this message was edited|ההודעה נערכה)>\s*/gi;
+const RE_YOUDEL = /you deleted this message|מחקת את ההודעה/i;
+
+function parseWhatsApp(raw){
+  const lines = raw.replace(/\r\n?/g,'\n').split('\n');
+  const recs = []; let cur = null;
+  for (let line of lines){
+    line = line.replace(CLEAN,'').replace(/[  ]/g,' ');
+    const m = line.match(RE_IOS) || line.match(RE_AND);
+    if (m){
+      const rest = m[8]; const ci = rest.indexOf(': ');
+      const sender = ci > 0 && ci < 48 ? rest.slice(0,ci).trim() : null;
+      cur = {a:+m[1], b:+m[2], c:+m[3], h:+m[4], mi:+m[5], s:+(m[6]||0), ap:(m[7]||'').toLowerCase(), sender, text: sender ? rest.slice(ci+2) : rest};
+      recs.push(cur);
+    } else if (cur){ cur.text += '\n' + line; }
+  }
+  let order = 'dmy';
+  if (recs.some(r => r.a > 31)) order = 'ymd';
+  else if (recs.some(r => r.a > 12)) order = 'dmy';
+  else if (recs.some(r => r.b > 12)) order = 'mdy';
+  const out = [];
+  for (const r of recs){
+    if (!r.sender) continue;
+    let d, mo, y;
+    if (order === 'ymd'){ y=r.a; mo=r.b; d=r.c; } else if (order === 'mdy'){ mo=r.a; d=r.b; y=r.c; } else { d=r.a; mo=r.b; y=r.c; }
+    if (y < 100) y += 2000;
+    let h = r.h;
+    if (r.ap.startsWith('p') && h < 12) h += 12;
+    if (r.ap.startsWith('a') && h === 12) h = 0;
+    const t = new Date(y, mo-1, d, h, r.mi, r.s).getTime();
+    if (isFinite(t)) out.push({t, s:r.sender, text:r.text.trim()});
+  }
+  return out;
+}
+function parseTelegram(json){
+  const out = [];
+  for (const m of (json && json.messages) || []){
+    if (m.type !== 'message' || !m.from) continue;
+    let text = typeof m.text === 'string' ? m.text : (Array.isArray(m.text) ? m.text.map(x => typeof x === 'string' ? x : (x.text||'')).join('') : '');
+    if (!text && (m.media_type || m.photo || m.file)) text = '<media omitted>';
+    const t = new Date(m.date).getTime();
+    if (isFinite(t)) out.push({t, s:String(m.from), text});
+  }
+  return out;
+}
+function prepare(msgs){
+  const youDel = {};
+  for (const m of msgs) if (RE_YOUDEL.test(m.text)) youDel[m.s] = (youDel[m.s]||0) + 1;
+  msgs = msgs.map(m => ({...m, text: m.text.replace(RE_EDIT,'').trim()})).filter(m => m.text.length).sort((x,y) => x.t - y.t);
+  const counts = {}; for (const m of msgs) counts[m.s] = (counts[m.s]||0) + 1;
+  return {msgs, counts, youDel, people: Object.keys(counts).sort((x,y) => counts[y]-counts[x])};
+}
+/* who exported the chat: WhatsApp names the file after the other person; "you deleted" lines belong to the exporter */
+function guessMe(chat, hint){
+  const two = chat.people.slice(0,2);
+  const norm = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'');
+  if (hint){
+    const cand = norm(hint.replace(/\.(txt|zip|json)$/i,'').replace(/whatsapp|chat|צ['׳]?אט|ווטסאפ|וואטסאפ|with|עם|\(\d+\)/gi,' '));
+    if (cand.length >= 2){
+      const other = two.find(p => { const n = norm(p); return n && (n === cand || n.includes(cand) || cand.includes(n)); });
+      if (other) return {me: two.find(p => p !== other), sure:true};
+    }
+  }
+  const del = two.find(p => chat.youDel[p]);
+  if (del) return {me: del, sure:true};
+  return {me: two[0], sure:false};
+}
+
+/* ---------- sample (fictional) ---------- */
+function sampleChat(){
+  let seed = 20250301;
+  const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; };
+  const pick = a => a[Math.floor(rnd()*a.length)];
+  const A = 'יואב', B = 'מיכל 🌸';
+  const pool = {
+    A:[['בוקר טוב 🙂','חשבתי עלייך כל הבוקר','מתי נתראה שוב?','היה ערב מושלם','שלחתי לך שיר, תגידי מה דעתך','אני כבר מתגעגע 😍','מה את עושה עכשיו?','יאללה סושי בחמישי?','לילה טוב מיכלי ❤️','את לא נורמלית חחחח'],
+       ['אני יוצא מהעבודה','מה עם שישי אצל ההורים שלך?','ראית את זה? חחח','אוהב אותך','הזמנתי שולחן לשמונה','את בבית?','שכחתי את המפתחות שוב 🙈','מה לקנות לארוחת ערב?','אני נשאר עד מאוחר במשרד, סורי','יאללה סדרה הערב?','שוב ביטלו לי את החופש, נדחה את הצפון'],
+       ['למה לא ענית?','אפשר לדבר הערב?','סליחה, היה יום קשה','אני מנסה פה','את כועסת?','נו?','אני לא מבין מה קרה','מתגעגע אלייך','עזבי, לא משנה','שמתי לב שאת רחוקה לאחרונה','אני עמוס בעבודה, את יודעת את זה']],
+    B:[['בוקר טוב יובי ☀️','חחחח אתה מצחיק','גם אני חשבתי עליך','אוהבת את הצחוק שלך','תספר לי עוד על הטיול ההוא','כן! חמישי מושלם','מתגעגעת כבר 🥰','אתה ער?','לילה טוב ❤️','שמעתי את השיר, הוא מהמם'],
+       ['תקנה חלב בדרך?','עייפה מטורף היום','אוהבת אותך','תתקשר כשאתה מתפנה','שוב עד מאוחר?','חחח כן ראיתי','אני בבית','מתגעגעת','אמא שלי שואלת מתי באים','חשוב לי שנצא לצפון כמו שאמרנו','הייתי רוצה שנבלה יותר זמן ביחד'],
+       ['בסדר','אוקי','עסוקה','נדבר אחר כך','שוב אתה עושה את זה','אני לא רוצה לריב בוואטסאפ','אתה בכלל שומע מה אני אומרת?','👍','אני צריכה קצת זמן לחשוב','לא יודעת מה להגיד לך','אתה תמיד בעבודה']]
+  };
+  const vol = [.5,1,1.4,1.5,1.35,1.2,1.1,1,1,.9,.85,.7,.55,.6,.35,.15];
+  const pInitB = [.6,.55,.5,.5,.45,.45,.4,.4,.35,.35,.3,.25,.2,.25,.15,.2];
+  const out = []; const start = new Date(2025,2,4);
+  for (let day=0; day<460; day++){
+    const date = new Date(start.getTime() + day*DAY);
+    const mi = (date.getFullYear()-2025)*12 + date.getMonth() - 2;
+    if (mi > 15) break;
+    const v = vol[mi];
+    if (rnd() > Math.min(.97, .45 + v*.35)) continue;
+    const phase = mi < 4 ? 0 : mi < 11 ? 1 : 2;
+    const nSess = 1 + Math.floor(rnd()*v*2);
+    const hours = phase===0 ? [8,13,21,22,23] : [8,12,13,18,19,21];
+    for (let s=0; s<nSess; s++){
+      let t = new Date(date.getFullYear(), date.getMonth(), date.getDate(), pick(hours), Math.floor(rnd()*60)).getTime() + s*3*36e5;
+      let who = rnd() < pInitB[mi] ? 'B' : 'A';
+      const turns = 3 + Math.floor(rnd()*v*7);
+      for (let k=0; k<turns; k++){
+        const run = 1 + Math.floor(rnd()*(who==='A' && phase===2 ? 3 : 2));
+        for (let r=0; r<run; r++){ const ph = rnd() < .25 ? Math.max(0, phase-1) : phase; out.push({t, s: who==='A'?A:B, text: pick(pool[who][ph])}); t += (0.3 + rnd()*2)*MIN; }
+        if (phase===2 && who==='A' && rnd() < .3){ t += (40 + rnd()*140)*MIN; out.push({t, s:A, text: pick(['?','היי?','את שם?','נו?'])}); }
+        who = who==='A' ? 'B' : 'A';
+        t += -Math.log(1-rnd()) * (who==='B' ? [3,6,25,70][Math.min(3, phase + (mi>13?1:0))] : [2,4,6,8][phase]) * MIN;
+      }
+    }
+  }
+  const end = new Date(2026,5,9,22,40).getTime();
+  out.push({t:end, s:B, text:'אני חושבת שזה הסוף שלנו. תשמור על עצמך.'});
+  out.push({t:end + 47*MIN, s:A, text:'גם את.'});
+  return out;
+}
+
+/* ---------- state ---------- */
+const S = {chat:null, me:null, other:null, names:{me:'', other:''}, gender:{me:'?', other:'?'}, oneline:'', sure:true, src:'sample', label:'צ׳אט לדוגמה',
+  periods:[], digest:[], plan:'idle', planErr:'', answers:{}, report:'', ctl:null, running:false};
+let SAMPLE = null, TOOLS = false, ready = false;
+
+const CORE = [
+  {id:'need', q:'מי היה צריך את מי יותר, ומתי זה התהפך?', seeds:['מתגעגע','למה לא ענית','את שם','אתה שם','נו?','תעני','תענה','ער?','ערה?']},
+  {id:'fight', q:'על מה באמת רבתם? מה הנושא שמתחת לנושא?', seeds:['שוב','תמיד','אף פעם','כועס','עצבני','נמאס','די כבר','לריב','למה אתה','למה את']},
+  {id:'mine', q:'מה החלק שלך במה שהשתבש?', seeds:['סליחה','מצטער','סורי','לא התכוונתי','צודק','צודקת','עזוב','עזבי','לא משנה']},
+];
+let QUESTIONS = [];
+const freshQ = q => ({...q, on:true, s:'idle', text:'', err:'', note:'', elapsed:0});
+const dshort = t => new Date(t).toLocaleDateString('he-IL', {day:'numeric', month:'numeric', year:'2-digit'});
+const iso = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const line = m => { const d = new Date(m.t); return `${iso(m.t)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${m.s}: ${RE_MEDIA.test(m.text) ? '[מדיה]' : m.text.replace(/\s*\n\s*/g,' / ').slice(0,400)}`; };
+const pair = () => S.chat.msgs.filter(m => m.s === S.me || m.s === S.other);
+const cleanName = s => String(s).replace(/\p{Extended_Pictographic}|️|[\u{1F3FB}-\u{1F3FF}]/gu,'').replace(/\s+/g,' ').trim() || String(s);
+
+function load(msgs, src, label, hint){
+  if (!msgs || msgs.length < 10) return showErr('לא הצלחתי לקרוא הודעות. ודא שזה ייצוא של וואטסאפ (‎.txt‎ או ‎.zip‎) או טלגרם (‎result.json‎), או הדבק את הטקסט.');
+  const chat = prepare(msgs);
+  if (chat.people.length < 2) return showErr('נמצא רק משתתף אחד בצ׳אט.');
+  showErr(''); stopRun();
+  S.chat = chat; S.src = src; S.label = label;
+  $('srcLabel').textContent = label;
+  $('sampleNote').hidden = src !== 'sample';
+  $('reset').hidden = src === 'sample';
+  const g = src === 'sample' ? {me:'יואב', sure:true} : guessMe(chat, hint);
+  S.sure = g.sure;
+  const f = chat.msgs[0].t, l = chat.msgs[chat.msgs.length-1].t;
+  $('meta').textContent = `${nf.format(chat.msgs.length)} הודעות · ${dshort(f)} – ${dshort(l)}` + (chat.people.length > 2 ? ` · ${chat.people.length} משתתפים, מנותחים שני הכותבים העיקריים` : '');
+  setMe(g.me);
+}
+function setMe(me){
+  S.me = me; S.other = S.chat.people.slice(0,2).find(p => p !== me);
+  S.names = {me: cleanName(S.me), other: cleanName(S.other)}; S.gender = {me:'?', other:'?'}; S.oneline = '';
+  S.periods = makePeriods(); S.digest = S.periods.map(() => ({s:'idle', data:null}));
+  S.plan = 'idle'; S.planErr = '';
+  QUESTIONS = CORE.map(freshQ);
+  S.answers = {}; S.report = '';
+  renderAll();
+}
+function showErr(t){ $('err').textContent = t; $('err').hidden = !t; }
+
+/* ---------- periods ---------- */
+const PER_BUDGET = 36000;
+function makePeriods(){
+  const msgs = pair().filter(m => !RE_MEDIA.test(m.text));
+  const lens = msgs.map(m => line(m).length + 1);
+  const total = lens.reduce((a,b) => a+b, 0);
+  const n = Math.max(2, Math.min(10, Math.ceil(total / PER_BUDGET)));
+  const target = total / n; const groups = [];
+  let cur = [], acc = 0;
+  msgs.forEach((m,i) => { cur.push(i); acc += lens[i]; if (acc >= target && groups.length < n-1){ groups.push(cur); cur = []; acc = 0; } });
+  if (cur.length) groups.push(cur);
+  return groups.map(idx => {
+    let text;
+    const full = idx.reduce((a,i) => a + lens[i], 0);
+    if (full <= PER_BUDGET) text = idx.map(i => line(msgs[i])).join('\n');
+    else {
+      const k = 6, w = PER_BUDGET / k, parts = [];
+      for (let j=0; j<k; j++){
+        let p = Math.floor(idx.length * j / k), used = 0, chunk = [];
+        while (p < idx.length && used < w){ const L = line(msgs[idx[p]]); chunk.push(L); used += L.length + 1; p++; }
+        parts.push(chunk.join('\n'));
+      }
+      text = parts.join('\n…\n');
+    }
+    return {from: msgs[idx[0]].t, to: msgs[idx[idx.length-1]].t, n: idx.length, sampled: full > PER_BUDGET, text};
+  });
+}
+
+/* ---------- prompts ---------- */
+const gword = g => g === 'm' ? 'זכר' : g === 'f' ? 'נקבה' : 'לפי מה שעולה מהטקסט';
+function rules(){
+  return `הקשר: ניתוח של צ׳אט בין שני אנשים במערכת יחסים שהסתיימה.
+- הקורא של הניתוח מופיע בצ׳אט כ־"${S.me}". קרא לו ${S.names.me}. מגדר: ${gword(S.gender.me)}.
+- הצד השני מופיע בצ׳אט כ־"${S.other}". קרא לו/לה ${S.names.other}. מגדר: ${gword(S.gender.other)}.
+כללים:
+- כתוב בעברית. פנה ל־${S.names.me} בגוף שני, במגדר הנכון. התייחס ל־${S.names.other} בשם ובמגדר הנכון.
+- נוקב וישיר. לא מחמיא, לא מרכך ולא אכזרי. אם הראיות מצביעות על ${S.names.me}, תגיד את זה בפשטות.
+- כל טענה נשענת על ראיה מהחומר: תאריך וציטוט קצר (עד 15 מילים) שמופיע בחומר מילה במילה. אסור להמציא ציטוטים או אירועים.
+- הפרד בין מה שהראיות מראות לבין השערה, וסמן השערה כהשערה.
+- בלי אבחונים ובלי תוויות פסיכולוגיות. תאר התנהגות ודפוסים, לא אופי.
+- זה רק טקסט: אין כאן שיחות טלפון, מפגשים או הקשר חיצוני. אל תעמיד פנים שאתה יודע מה קרה שם.`;
+}
+function readerPrompt(i){
+  const p = S.periods[i];
+  return `${rules()}
+
+אתה סוכן קורא, אחד מתוך ${S.periods.length}. כל קורא מקבל תקופה אחת מהצ׳אט. התקופה שלך: חלק ${i+1}, ${iso(p.from)} עד ${iso(p.to)}${p.sampled ? ' (מדגם של חלונות רצופים מתוך התקופה, … מסמן דילוג)' : ''}.
+אחריך יבואו סוכנים שינסחו שאלות קשות על הקשר ויחקרו אותן. תפקידך לרשום עבורם ממצאים מדויקים: מה קרה, מי עשה מה, ומה השתנה. העדף פרטים ספציפיים על פני הכללות.
+
+החזר רק JSON בצורה הזו (ערכים בעברית, מערכים יכולים להיות ריקים):
+{"names":{"me":"השם או הכינוי שבו פונים ל־${S.me} בתקופה הזו, או ריק","other":"השם או הכינוי שבו פונים ל־${S.other}, או ריק"},
+"gender":{"me":"m|f|?","other":"m|f|?"},
+"summary":"2-3 משפטים על מה שקורה בתקופה","tone":"הטון בכמה מילים","themes":["נושא"],
+"events":[{"date":"YYYY-MM-DD","what":"מה קרה","quote":"ציטוט מדויק קצר"}],
+"conflicts":[{"date":"YYYY-MM-DD","trigger":"מה הצית","underneath":"מה כנראה היה מתחת","who_escalated":"שם","how_ended":"איך נגמר","quote":"ציטוט"}],
+"needs":{"me":"מה ${S.me} ביקש או היה צריך","other":"מה ${S.other} ביקש או היה צריך"},
+"dynamics":"מי רודף, מי נסוג, מי יוזם, מי מתנצל",
+"red_flags":[{"date":"YYYY-MM-DD","what":"סימן","quote":"ציטוט"}],
+"unsaid":"מה מורגש אבל לא נאמר במפורש",
+"best_moment":{"date":"YYYY-MM-DD","quote":"ציטוט"}}
+מגדר: m או f רק אם הטקסט מראה את זה (פעלים, כינויים), אחרת ?. עד 6 פריטים בכל מערך.
+
+הצ׳אט בתקופה:
+${p.text}`;
+}
+const arr = x => Array.isArray(x) ? x : [];
+function digestText(){
+  return S.digest.map((d,i) => {
+    const p = S.periods[i], x = d.data;
+    const head = `### תקופה ${i+1}: ${iso(p.from)} עד ${iso(p.to)}`;
+    if (!x) return head + '\n(התקופה לא נותחה)';
+    const q = s => s ? ` ״${s}״` : '';
+    return [head,
+      `סיכום: ${x.summary||''}`, `טון: ${x.tone||''}`, arr(x.themes).length ? `נושאים: ${arr(x.themes).join(', ')}` : '',
+      ...arr(x.events).map(e => `- אירוע ${e.date||''}: ${e.what||''}${q(e.quote)}`),
+      ...arr(x.conflicts).map(c => `- חיכוך ${c.date||''}: ${c.trigger||''} | מתחת: ${c.underneath||''} | הסלים: ${c.who_escalated||''} | נגמר: ${c.how_ended||''}${q(c.quote)}`),
+      x.needs ? `צרכים: ${S.names.me}: ${x.needs.me||''}; ${S.names.other}: ${x.needs.other||''}` : '',
+      `דינמיקה: ${x.dynamics||''}`,
+      ...arr(x.red_flags).map(r => `- סימן אזהרה ${r.date||''}: ${r.what||''}${q(r.quote)}`),
+      x.unsaid ? `לא נאמר: ${x.unsaid}` : '',
+      x.best_moment && x.best_moment.quote ? `רגע טוב: ${x.best_moment.date||''}${q(x.best_moment.quote)}` : '',
+    ].filter(Boolean).join('\n');
+  }).join('\n\n');
+}
+function namesFromReaders(){
+  const tally = (key) => { const c = {}; for (const d of S.digest){ const v = d.data && d.data.names && String(d.data.names[key]||'').trim(); if (v) c[v] = (c[v]||0) + 1; } return Object.entries(c).sort((a,b) => b[1]-a[1]).map(e => e[0]).slice(0,4); };
+  const gtally = (key) => { const c = {m:0, f:0}; for (const d of S.digest){ const v = d.data && d.data.gender && d.data.gender[key]; if (v === 'm' || v === 'f') c[v]++; } return c.m > c.f ? 'm' : c.f > c.m ? 'f' : '?'; };
+  return {me: tally('me'), other: tally('other'), gme: gtally('me'), gother: gtally('other')};
+}
+function plannerPrompt(){
+  const nr = namesFromReaders();
+  return `${rules()}
+
+אתה הסוכן המתכנן. הסוכנים הקוראים סיכמו את הצ׳אט לפי תקופות (למטה).
+1. קבע איך לקרוא לכל אחד בניתוח: השם הפרטי שלו כפי שהוא מופיע בצ׳אט (שם התצוגה, שמות שפונים בהם, חתימות). בלי אימוג׳י. אם השם בעברית, כתוב בעברית. הקוראים דיווחו על הכינויים: ל־"${S.me}": ${nr.me.join(', ') || 'אין'}; ל־"${S.other}": ${nr.other.join(', ') || 'אין'}. ומגדר לפי הטקסט.
+2. כתוב משפט אחד, חד ולא גנרי, שמתאר במה הקשר הזה עסק באמת.
+3. נסח 5 שאלות נוקבות שספציפיות לקשר הזה: כאלה שאי אפשר היה לשאול על זוג אחר, שנוגעות במה שלא נוח לראות, ושהתשובה עליהן תסביר מה קרה כאן. השתמש בשמות ובפרטים מהממצאים. לכל שאלה: נימוק של משפט אחד, ו־3 עד 6 מילות חיפוש שבאמת מופיעות בהודעות.
+אל תחזור על השאלות הקבועות האלה: ${CORE.map(q => '«' + q.q + '»').join(' ')}.
+
+החזר רק JSON:
+{"me":{"name":"","gender":"m|f|?"},"other":{"name":"","gender":"m|f|?"},"one_line":"","questions":[{"q":"","why":"","search":[""]}]}
+
+סיכומי הקוראים:
+${digestText()}`;
+}
+function prefetch(q, cap){
+  const seeds = arr(q.seeds).map(s => String(s).toLowerCase()).filter(s => s.length > 1);
+  if (!seeds.length) return '';
+  const msgs = pair(); const hits = [];
+  msgs.forEach((m,i) => { const t = m.text.toLowerCase(); if (seeds.some(s => t.includes(s))) hits.push(i); });
+  if (!hits.length) return '';
+  const k = Math.min(16, hits.length), chosen = [];
+  for (let j=0; j<k; j++) chosen.push(hits[Math.floor(j * hits.length / k)]);
+  let out = '', used = 0;
+  for (const h of chosen){ const blk = msgs.slice(Math.max(0,h-2), h+3).map(line).join('\n'); if (used + blk.length > cap) break; out += blk + '\n---\n'; used += blk.length; }
+  return out;
+}
+function investigatorPrompt(q){
+  const pre = prefetch(q, 12000);
+  return `${rules()}
+
+אתה סוכן חוקר. כמה חוקרים עובדים במקביל, וכל אחד מקבל שאלה אחת נוקבת על הקשר. השאלה שלך:
+«${q.q}»${q.why ? `\n(למה השאלה נשאלה: ${q.why})` : ''}
+
+יש לך סיכומים של סוכנים קוראים לפי תקופות${pre ? ', וקטעים שנשלפו מראש מתוך הצ׳אט' : ''}.${TOOLS ? ` יש לך גם כלים: search_chat לחיפוש בצ׳אט המלא, ו־read_range לקריאת כל ההודעות בטווח תאריכים. לפני שאתה עונה, השתמש בהם כדי לאמת את ההשערה שלך ולמצוא ציטוטים מדויקים, לכל היותר 3 קריאות.` : ''}
+אם הראיות סותרות את ההנחה שבשאלה, אמור את זה. אל תענה בכלליות.
+
+ענה ב־Markdown, בדיוק במבנה הזה:
+## התשובה
+(2–4 משפטים חדים)
+## הראיות
+(3–5 פריטים. כל אחד: שורה שמתחילה ב־> עם הציטוט, שם ותאריך, ואחריה שורה אחת שמסבירה למה זה חשוב)
+## מה אי אפשר לדעת מכאן
+(משפט אחד או שניים)
+## שאלה אליך
+(שאלה אחת, קשה וכנה, ל־${S.names.me}. כזו שאי אפשר לענות עליה בכן או לא)
+
+סיכומי הקוראים:
+${digestText()}
+${pre ? `\nקטעים שנשלפו (כל קטע מופרד ב־---):\n${pre}` : ''}`;
+}
+function synthPrompt(){
+  const done = QUESTIONS.filter(q => q.text);
+  const qa = done.map(q => {
+    const mine = (S.answers[q.id] || '').trim();
+    return `#### שאלה: ${q.q}\n${q.text.slice(0, 3000)}${mine ? `\nהתשובה של ${S.names.me} לשאלה שהוחזרה אליו: "${mine}"` : ''}`;
+  }).join('\n\n');
+  const anyAns = done.some(q => (S.answers[q.id]||'').trim());
+  return `${rules()}
+
+אתה סוכן הסיכום. ${S.periods.length} סוכנים קוראים עברו על הצ׳אט לפי תקופות, ו־${done.length} סוכנים חוקרים ענו על שאלות נוקבות.
+כתוב ניתוח כללי ומעמיק של מערכת היחסים בין ${S.names.me} ל־${S.names.other}. זה המסמך המרכזי: הוא צריך לעמוד בפני עצמו. אל תסכם שאלה אחרי שאלה. השתמש בממצאים כחומר גלם, חבר ביניהם, מצא את הדפוס המרכזי והסבר אותו.
+${anyAns ? `${S.names.me} ענה על חלק מהשאלות שהחוקרים החזירו אליו. השווה את התשובות שלו לראיות: אם הוא מייפה, מגונן או מאשים בלי בסיס, אמור לו את זה והראה את הראיה. אם הצ׳אט מאשר את מה שהוא אומר, אמור גם את זה.` : ''}
+
+מבנה (Markdown, 900–1300 מילים):
+## השורה התחתונה
+(3–4 משפטים)
+## איך זה התפתח
+(3–5 פרקים לפי ציר הזמן. לכל פרק שם קצר, טווח תאריכים, ומה השתנה)
+## הדינמיקה ביניכם
+(מי רדף, מי נסוג, מי החזיק את הקשר, ואיך זה זז לאורך הזמן)
+## על מה באמת רבתם
+## מה כל אחד היה צריך
+## הרגע שזה התחיל להישבר
+## מה שלא נאמר
+## החלק שלך
+${anyAns ? `## איפה הסיפור שלך לא תואם את הצ׳אט\n` : ''}## מה לקחת לקשר הבא
+(3 דברים קונקרטיים, התנהגותיים)
+
+ממצאי החוקרים:
+${qa}
+
+סיכומי הקוראים:
+${digestText()}`;
+}
+
+/* ---------- tools for investigators ---------- */
+function tools(q){
+  const setNote = t => { q.note = t; renderQ(q); };
+  return [
+    {name:'search_chat', description:'חיפוש בכל הצ׳אט המלא. מקבל query: מילה או ביטוי, אפשר כמה חלופות מופרדות ב־|. מחזיר את מספר ההתאמות ועד 20 התאמות, כל אחת עם שתי הודעות לפני ואחרי.',
+      inputSchema:{type:'object', properties:{query:{type:'string', description:'מילה או ביטוי, חלופות מופרדות ב־|'}}, required:['query']},
+      execute(input){
+        const qs = String(input.query || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean);
+        if (!qs.length) throw new Error('query ריק');
+        setNote(`מחפש: ${qs.join(' / ')}`);
+        const msgs = pair(); const hits = [];
+        msgs.forEach((m,i) => { const t = m.text.toLowerCase(); if (qs.some(s => t.includes(s))) hits.push(i); });
+        const k = Math.min(20, hits.length), chosen = [];
+        for (let j=0; j<k; j++) chosen.push(hits[Math.floor(j * hits.length / k)]);
+        let out = `נמצאו ${hits.length} התאמות. מוצגות ${k}${hits.length > k ? ', פרוסות לאורך כל הצ׳אט' : ''}:\n`;
+        for (const h of chosen){ const blk = msgs.slice(Math.max(0,h-2), h+3).map(line).join('\n'); if (out.length + blk.length > 22000) break; out += blk + '\n---\n'; }
+        return out;
+      }},
+    {name:'read_range', description:'מחזיר את כל ההודעות בין שני תאריכים (כולל), עד 150 הודעות. מתאים לקריאת ויכוח או רגע מסוים במלואו.',
+      inputSchema:{type:'object', properties:{from:{type:'string', description:'YYYY-MM-DD'}, to:{type:'string', description:'YYYY-MM-DD'}}, required:['from','to']},
+      execute(input){
+        const a = new Date(String(input.from) + 'T00:00:00').getTime(), b = new Date(String(input.to) + 'T00:00:00').getTime() + DAY;
+        if (!isFinite(a) || !isFinite(b)) throw new Error('תאריך לא תקין, צריך YYYY-MM-DD');
+        setNote(`קורא: ${input.from} עד ${input.to}`);
+        const sel = pair().filter(m => m.t >= a && m.t < b);
+        let out = `${sel.length} הודעות בטווח${sel.length > 150 ? ', מוצגות 150 הראשונות' : ''}:\n`;
+        for (const m of sel.slice(0,150)){ const L = line(m); if (out.length + L.length > 24000){ out += '…(נקטע)'; break; } out += L + '\n'; }
+        return out;
+      }},
+  ];
+}
+
+/* ---------- running ---------- */
+const ERR = {
+  not_granted:'הגישה ל־Claude לא אושרה בעמוד הזה.', sampling_disabled:'Claude לא זמין בחשבון הזה.', rate_limited:'הגעת למגבלת שימוש. נסה שוב בעוד כמה דקות.',
+  prompt_too_large:'הקטע ארוך מדי לבקשה אחת.', refused:'Claude סירב לחלק הזה.', session_expired:'צריך להתחבר מחדש ל־Claude.', invalid_json:'התשובה לא הגיעה בפורמט הנכון.',
+  empty_completion:'לא התקבלה תשובה.', upstream_error:'החיבור נקטע.', tools_unavailable:'הכלים לא זמינים כאן.'
+};
+const errMsg = e => ERR[e && e.code] || ERR.upstream_error;
+const fatal = e => e && ['not_granted','sampling_disabled','session_expired','rate_limited'].includes(e.code);
+
+async function pool(items, n, fn){
+  let i = 0;
+  await Promise.all(Array.from({length:n}, async () => { while (i < items.length && !S.ctl.signal.aborted){ const it = items[i++]; await fn(it); } }));
+}
+async function runReader(i){
+  const d = S.digest[i]; d.s = 'run'; renderPeriods();
+  try { d.data = await SAMPLE.json(readerPrompt(i), {signal:S.ctl.signal}); d.s = 'done'; }
+  catch(e){ d.s = e && e.code === 'cancelled' ? 'idle' : 'err'; d.err = errMsg(e); if (fatal(e)) S.fatal = e; }
+  renderPeriods();
+}
+async function runPlanner(){
+  S.plan = 'run'; renderStages();
+  try {
+    const p = await SAMPLE.json(plannerPrompt(), {signal:S.ctl.signal});
+    const nm = s => String(s || '').replace(/\p{Extended_Pictographic}|️/gu,'').trim();
+    if (p && p.me && nm(p.me.name)) S.names.me = nm(p.me.name);
+    if (p && p.other && nm(p.other.name)) S.names.other = nm(p.other.name);
+    if (p && p.me && ['m','f'].includes(p.me.gender)) S.gender.me = p.me.gender;
+    if (p && p.other && ['m','f'].includes(p.other.gender)) S.gender.other = p.other.gender;
+    S.oneline = p && p.one_line ? String(p.one_line) : '';
+    QUESTIONS = QUESTIONS.filter(q => !q.dyn);
+    arr(p && p.questions).slice(0,6).forEach((x,i) => { if (x && x.q) QUESTIONS.splice(CORE.length + i, 0, freshQ({id:'d'+i, q:String(x.q), why:String(x.why||''), seeds:arr(x.search).map(String), dyn:true})); });
+    S.plan = 'done';
+  } catch(e){
+    S.plan = e && e.code === 'cancelled' ? 'idle' : 'err'; S.planErr = errMsg(e); if (fatal(e)) S.fatal = e;
+    const nr = namesFromReaders(); if (S.gender.me === '?') S.gender.me = nr.gme; if (S.gender.other === '?') S.gender.other = nr.gother;
+  }
+  renderIdentity(); renderQs(); renderStages();
+}
+async function runQuestion(q){
+  q.s = 'run'; q.text = ''; q.err = ''; q.note = 'קורא את הסיכומים…'; q.elapsed = 0; renderQ(q);
+  const t0 = Date.now(); const tick = setInterval(() => { if (q.s === 'run' && !q.text){ q.elapsed = Math.round((Date.now()-t0)/1000); renderQ(q, true); } }, 1000);
+  try {
+    const opts = {signal:S.ctl.signal, onText:({text}) => { q.text = text; q.note = ''; renderQ(q); }};
+    if (TOOLS) opts.tools = tools(q);
+    const {text} = await SAMPLE(investigatorPrompt(q), opts);
+    q.text = text; q.s = 'done';
+  } catch(e){
+    if (e && e.text) q.text = e.text;
+    if (e && e.code === 'refused') q.text = '';
+    q.s = e && e.code === 'cancelled' ? (q.text ? 'done' : 'idle') : 'err'; q.err = q.s === 'err' ? errMsg(e) : '';
+    if (fatal(e)) S.fatal = e;
+  } finally { clearInterval(tick); q.note = ''; renderQ(q); renderStages(); }
+}
+async function runSynth(){
+  $('rstat').textContent = 'נכתב…'; $('rempty').hidden = true;
+  $('report').innerHTML = '<p class="status">סוכן הסיכום קורא את כל הממצאים. זה יכול לקחת כמה דקות.</p>';
+  try {
+    const {text, truncated} = await SAMPLE(synthPrompt(), {signal:S.ctl.signal, modelTier:'complex', cache:false, onText:({text}) => { S.report = text; $('report').innerHTML = md(text); }});
+    S.report = text; $('report').innerHTML = md(text) + (truncated ? '<p class="status">הניתוח נקטע בגלל אורך.</p>' : '');
+    $('rstat').textContent = '';
+  } catch(e){
+    if (e && e.text){ S.report = e.text; $('report').innerHTML = md(e.text); }
+    else { $('report').innerHTML = S.report ? md(S.report) : ''; $('rempty').hidden = !!S.report; }
+    $('rstat').textContent = e && e.code === 'cancelled' ? 'נעצר' : errMsg(e);
+  }
+  renderStages();
+}
+function begin(){ S.running = true; S.fatal = null; S.ctl = new AbortController(); $('wrap').classList.add('running'); $('go').disabled = true; $('stop').hidden = false; renderStages(); }
+async function run(){
+  if (!SAMPLE || S.running) return;
+  begin();
+  try {
+    await pool(S.digest.map((d,i) => i).filter(i => S.digest[i].s !== 'done'), 2, runReader);
+    if (S.fatal) throw S.fatal;
+    if (!S.digest.some(d => d.s === 'done')) throw {code:'upstream_error'};
+    if (S.plan !== 'done') await runPlanner();
+    if (S.fatal) throw S.fatal;
+    if (S.ctl.signal.aborted) return;
+    await pool(QUESTIONS.filter(q => q.on && q.s !== 'done'), 2, runQuestion);
+    if (S.fatal) throw S.fatal;
+    if (S.ctl.signal.aborted) return;
+    if (QUESTIONS.some(q => q.text)) await runSynth();
+  } catch(e){
+    $('rstat').textContent = e && e.code !== 'cancelled' ? errMsg(e) : '';
+    if (e && (e.code === 'not_granted' || e.code === 'sampling_disabled')){ SAMPLE = null; setEnabled(); }
+  } finally { stopRun(true); }
+}
+function stopRun(finished){
+  if (S.ctl && !finished) S.ctl.abort();
+  S.running = false; $('wrap').classList.remove('running');
+  $('go').disabled = !SAMPLE; $('stop').hidden = true;
+  renderStages();
+}
+
+/* ---------- rendering ---------- */
+function md(src){
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const lines = String(src).replace(/\r/g,'').split('\n'); let h = '', list = null, para = [];
+  const flushP = () => { if (para.length){ h += `<p>${inline(para.join(' '))}</p>`; para = []; } };
+  const flushL = () => { if (list){ h += `<${list.t}>${list.items.map(i => `<li>${inline(i)}</li>`).join('')}</${list.t}>`; list = null; } };
+  for (const raw of lines){
+    const l = raw.trim(); let m;
+    if (!l){ flushP(); flushL(); continue; }
+    if ((m = l.match(/^#{1,5}\s+(.*)$/))){ flushP(); flushL(); h += `<h3>${inline(m[1])}</h3>`; continue; }
+    if ((m = l.match(/^>\s?(.*)$/))){ flushP(); flushL(); h += `<blockquote>${inline(m[1])}</blockquote>`; continue; }
+    if ((m = l.match(/^[-*•]\s+(.*)$/))){ flushP(); if (!list || list.t !== 'ul'){ flushL(); list = {t:'ul', items:[]}; } list.items.push(m[1]); continue; }
+    if ((m = l.match(/^\d+[.)]\s+(.*)$/))){ flushP(); if (!list || list.t !== 'ol'){ flushL(); list = {t:'ol', items:[]}; } list.items.push(m[1]); continue; }
+    if (/^-{3,}$/.test(l)){ flushP(); flushL(); continue; }
+    flushL(); para.push(l);
+  }
+  flushP(); flushL(); return h;
+}
+function splitToYou(text){
+  const m = text.match(/^#{1,4}\s*שאלה אליך\s*$/m);
+  if (!m) return [text, ''];
+  return [text.slice(0, m.index), text.slice(m.index + m[0].length).trim()];
+}
+function renderIdentity(){
+  $('nMe').textContent = S.names.me; $('nOther').textContent = S.names.other;
+  $('unsure').hidden = S.sure;
+  $('oneline').textContent = S.oneline;
+  $('swap').disabled = S.running;
+}
+function renderPeriods(){
+  $('periods').innerHTML = S.periods.map((p,i) => `<span class="pchip" data-s="${S.digest[i].s}" data-i="${i}" title="${S.digest[i].s === 'err' ? esc(S.digest[i].err) + ' · לחץ כדי לנסות שוב' : nf.format(p.n) + ' הודעות'}"><span class="dot"></span>${i+1} · ${dshort(p.from)}–${dshort(p.to)}</span>`).join('');
+  const done = S.digest.filter(d => d.s === 'done').length;
+  $('k1').textContent = `${done}/${S.periods.length} תקופות`;
+  $('digestBox').hidden = !done;
+  if (done) $('digest').innerHTML = md(digestText());
+  renderStages();
+}
+function renderQ(q, tickOnly){
+  const el = document.querySelector(`.q[data-id="${q.id}"]`); if (!el) return;
+  el.dataset.s = q.s;
+  const st = el.querySelector('.qst');
+  st.textContent = q.s === 'run' ? (q.text ? 'כותב…' : `${q.note || 'חוקר…'}${q.elapsed ? ` · ${q.elapsed} שנ׳` : ''}`) : q.s === 'err' ? q.err : '';
+  st.hidden = !st.textContent;
+  if (tickOnly) return;
+  const body = el.querySelector('.qbody');
+  const ta = body.querySelector('textarea'); if (ta && document.activeElement === ta) return;
+  if (!q.text){ body.innerHTML = q.s === 'err' ? `<button class="ghost" type="button" data-retry="${q.id}">נסה שוב</button>` : ''; return; }
+  const [main, toYou] = splitToYou(q.text);
+  let h = md(main);
+  if (toYou){
+    h += `<div class="toyou"><b>שאלה אליך</b><p>${esc(toYou.replace(/^\(|\)$/g,''))}</p>${q.s === 'done' ? `<label class="vh" for="ans-${q.id}" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">התשובה שלך</label><textarea id="ans-${q.id}" data-ans="${q.id}" rows="2" placeholder="התשובה שלך, בכנות. לא חובה.">${esc(S.answers[q.id] || '')}</textarea>` : ''}</div>`;
+  }
+  if (q.s === 'done' || q.s === 'err') h += `<div class="btnrow" style="margin-top:10px"><button class="ghost" type="button" data-retry="${q.id}">חקור שוב</button></div>`;
+  body.innerHTML = `<div class="out">${h}</div>`;
+}
+function renderQs(){
+  $('qs').innerHTML = QUESTIONS.map(q => `<div class="q" data-id="${q.id}" data-s="${q.s}"><div class="qh"><input type="checkbox" id="on-${q.id}" data-on="${q.id}" ${q.on ? 'checked' : ''} aria-label="כלול בחקירה"><label class="qt" for="on-${q.id}">${esc(q.q)}${q.dyn ? '<span class="tag">מהצ׳אט</span>' : q.custom ? '<span class="tag">שלך</span>' : ''}</label></div>${q.why ? `<p class="why">${esc(q.why)}</p>` : ''}<div class="qst" hidden></div><div class="qbody"></div></div>`).join('')
+    + (S.plan === 'run' ? '<p class="status">המתכנן מנסח שאלות לפי הצ׳אט…</p>' : S.plan === 'idle' ? '<p class="status">עוד כ־5 שאלות ינוסחו מתוך הצ׳אט אחרי שהקוראים יסיימו.</p>' : S.plan === 'err' ? `<p class="status">${esc(S.planErr)} השאלות הדינמיות לא נוסחו.</p>` : '');
+  QUESTIONS.forEach(q => renderQ(q));
+}
+function renderStages(){
+  const r = S.digest.filter(d => d.s === 'done').length, qon = QUESTIONS.filter(q => q.on), qd = qon.filter(q => q.s === 'done').length;
+  $('st1').className = 'stage' + (r === S.periods.length ? ' done' : S.digest.some(d => d.s === 'run') ? ' active' : '');
+  $('st2').className = 'stage' + (S.plan === 'done' ? ' done' : S.plan === 'run' ? ' active' : '');
+  $('st3').className = 'stage' + (qon.length && qd === qon.length ? ' done' : QUESTIONS.some(q => q.s === 'run') ? ' active' : '');
+  $('k2').textContent = S.plan === 'done' ? `${QUESTIONS.length} שאלות` : '';
+  $('k3').textContent = `${qd}/${qon.length} נחקרו`;
+  const pending = S.digest.filter(d => d.s !== 'done').length + (S.plan === 'done' ? 0 : 1) + qon.filter(q => q.s !== 'done').length + (S.plan === 'done' ? 0 : 5) + 1;
+  if (S.running) $('est').textContent = 'החקירה רצה. אפשר לקרוא את הממצאים בתיק החקירה תוך כדי.';
+  else $('est').textContent = SAMPLE ? `כ־${pending} קריאות ל־Claude על חשבון השימוש שלך · בערך ${Math.max(3, Math.round(pending*0.6))}–${Math.round(pending*1.3)+2} דקות` : '';
+  $('go').textContent = r || qd ? 'המשך חקירה' : 'פתח חקירה';
+  $('synthGo').hidden = S.running || !QUESTIONS.some(q => q.text) || !SAMPLE;
+  $('copy').hidden = !S.report || S.running;
+  $('rempty').hidden = !!S.report || ($('report').innerHTML !== '');
+  $('swap').disabled = S.running;
+}
+function renderAll(){ renderIdentity(); renderPeriods(); renderQs(); $('report').innerHTML = S.report ? md(S.report) : ''; $('rstat').textContent = ''; renderStages(); }
+function setEnabled(){ $('noSample').hidden = !ready || !!SAMPLE; $('go').disabled = !SAMPLE || S.running; renderStages(); }
+
+/* ---------- wiring ---------- */
+$('swap').addEventListener('click', () => { if (S.running) return; S.sure = true; setMe(S.other); });
+$('go').addEventListener('click', run);
+$('stop').addEventListener('click', () => stopRun());
+$('synthGo').addEventListener('click', async () => { if (S.running || !SAMPLE) return; begin(); await runSynth(); stopRun(true); });
+$('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(S.report); $('copy').textContent = 'הועתק'; }
+  catch(e){ const r = document.createRange(); r.selectNodeContents($('report')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('copy').textContent = 'מסומן, העתק ידנית'; }
+  setTimeout(() => $('copy').textContent = 'העתק את הניתוח', 2000);
+});
+$('periods').addEventListener('click', async e => {
+  const c = e.target.closest('.pchip[data-s="err"]'); if (!c || S.running || !SAMPLE) return;
+  begin(); await runReader(+c.dataset.i); stopRun(true);
+});
+$('qs').addEventListener('change', e => { const id = e.target.dataset.on; if (id){ QUESTIONS.find(q => q.id === id).on = e.target.checked; renderStages(); } });
+$('qs').addEventListener('input', e => { const id = e.target.dataset.ans; if (id) S.answers[id] = e.target.value; });
+$('qs').addEventListener('click', async e => {
+  const b = e.target.closest('[data-retry]'); if (!b || S.running || !SAMPLE) return;
+  const q = QUESTIONS.find(x => x.id === b.dataset.retry);
+  begin();
+  if (!S.digest.some(d => d.s === 'done')) await pool(S.digest.map((d,i) => i).filter(i => S.digest[i].s !== 'done'), 2, runReader);
+  if (!S.ctl.signal.aborted) await runQuestion(q);
+  stopRun(true);
+});
+const addQ = () => {
+  const v = $('newq').value.trim(); if (!v) return;
+  QUESTIONS.push(freshQ({id:'c' + Date.now(), q:v, seeds:v.split(/\s+/).filter(w => w.length > 2).slice(0,4), custom:true}));
+  $('newq').value = ''; renderQs(); renderStages();
+};
+$('addq').addEventListener('click', addQ);
+$('newq').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); addQ(); } });
+
+$('file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) readFile(f); });
+$('reset').addEventListener('click', () => { $('file').value = ''; load(sampleChat(), 'sample', 'צ׳אט לדוגמה'); });
+$('pasteGo').addEventListener('click', () => { const t = $('paste').value; if (t.trim()) load(parseWhatsApp(t), 'paste', 'טקסט שהודבק'); });
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) readFile(f); });
+
+const readAs = (f, how) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r[how](f); });
+async function readFile(f){
+  showErr(''); $('srcLabel').textContent = 'קורא את ' + f.name + '…';
+  try {
+    const head = new Uint8Array(await readAs(f.slice(0,4), 'readAsArrayBuffer'));
+    let text, hint = f.name;
+    if (head[0] === 0x50 && head[1] === 0x4b){
+      if (!window.JSZip) throw new Error('nozip');
+      const zip = await JSZip.loadAsync(f);
+      const txt = Object.values(zip.files).filter(z => !z.dir && /\.txt$/i.test(z.name)).sort((a,b) => (/_chat|whatsapp/i.test(b.name)?1:0) - (/_chat|whatsapp/i.test(a.name)?1:0))[0];
+      if (!txt) return showErr('לא נמצא קובץ טקסט בתוך ה־zip.');
+      text = await txt.async('string');
+      if (!/^_chat/i.test(txt.name)) hint = txt.name.split('/').pop();
+    } else text = await readAs(f, 'readAsText');
+    let msgs;
+    if (/^\s*\{/.test(text)){ const j = JSON.parse(text); msgs = parseTelegram(j); if (j && j.name) hint = String(j.name); }
+    else msgs = parseWhatsApp(text);
+    load(msgs, 'file', f.name, hint);
+    if (!msgs || msgs.length < 10) $('srcLabel').textContent = S.label;
+  } catch(e){
+    $('srcLabel').textContent = S.label;
+    showErr(e && e.message === 'nozip' ? 'לא הצלחתי לפתוח את ה־zip כאן. חלץ את ‎_chat.txt‎ והעלה אותו, או הדבק את הטקסט.' : 'לא הצלחתי לקרוא את הקובץ. נסה להדביק את הטקסט במקום.');
+  }
+}
+
+load(sampleChat(), 'sample', 'צ׳אט לדוגמה');
+(async () => {
+  try {
+    SAMPLE = window.claude ? await window.claude.use('sample') : null;
+    if (SAMPLE){ const lim = await SAMPLE.limits().catch(() => null); TOOLS = !!(lim && lim.tools); }
+  } catch(e){ SAMPLE = null; }
+  ready = true; setEnabled();
+})();
+setTimeout(() => { if (!ready){ ready = true; setEnabled(); } }, 11000);
+})();
+</script>

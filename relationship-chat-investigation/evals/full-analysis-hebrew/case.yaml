@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: full-analysis-hebrew
+expected_outcome: |
+  The chat is parsed with the bundled script, Yoav is identified as the user, reader sub-agents cover every
+  period, relationship-specific questions are written, investigators answer them with dated quotes, and the
+  reply is a Hebrew relationship analysis addressed to Yoav in the second person, followed by the questions
+  sent back to him.
+context:
+  scaffold_script: place-files.sh

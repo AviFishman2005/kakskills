@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: publish-page
+expected_outcome: |
+  The bundled assets/blackbox.html page is published as an artifact with the sample capability, rather than
+  a new page being written from scratch, and the reply says in Hebrew what the page does.
