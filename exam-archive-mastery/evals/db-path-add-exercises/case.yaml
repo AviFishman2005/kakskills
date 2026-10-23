@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: db-path-add-exercises
+expected_outcome: |
+  Claude uses the 20277 build kit instead of rebuilding from scratch: fetches the kit files, adds three group by +
+  having exercises with reference queries, hints, fades and wrong variants to the SQL bank on existing schemas,
+  reruns the seed search / mutation test so every new reference is non-empty and every wrong variant is rejected,
+  rebuilds and republishes to the existing page URL, and says briefly in Hebrew what was added and verified.
