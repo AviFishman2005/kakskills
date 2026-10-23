@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: new-course-methods
+expected_outcome: |
+  Claude does stage 1 only: reads all four exams, writes for each exam its questions and the general method that
+  solves each, catches the wrong official solution in exam 4 question 1 (0.53 instead of 0.47), and ends with a cross-exam synthesis of patterns and
+  recipes, in Hebrew. It does not build a study page or learning path unasked, and offers the next stage in one
+  line.
+context:
+  scaffold_script: place-files.sh

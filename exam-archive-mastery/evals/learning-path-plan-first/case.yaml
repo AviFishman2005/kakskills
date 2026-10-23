@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: learning-path-plan-first
+expected_outcome: |
+  Claude researches effective learning tactics (retrieval practice, successive relearning / spacing, faded worked
+  examples, expertise reversal, interleaving) with sources, then presents a concrete plan — ladder per skill,
+  spaced reviews tied to the exam date, interleaved rounds, confidence ratings, exercise types and how they are
+  auto-checked, limits, build stages — in Hebrew, and asks for approval and the key decisions (stages, progress
+  storage) without building anything yet.
