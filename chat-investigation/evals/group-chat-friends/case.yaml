@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: group-chat-friends
+expected_outcome: |
+  The chat is parsed as a group, דניאל is identified as the user, readers use the group brief, questions are
+  specific to this group (Shira organising, Noam going unanswered, Omer's jokes), investigators answer with dated
+  quotes, and the reply is a Hebrew group analysis with a cast, the real structure, the tensions and Daniel's place
+  in the group, followed by questions sent back to him.
+context:
+  scaffold_script: place-files.sh

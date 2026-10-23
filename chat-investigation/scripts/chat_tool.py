@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Parse, split, search and digest chat exports for the relationship-chat-investigation skill.
+"""Parse, split, search and digest chat exports for the chat-investigation skill (two-person and group chats).
 
 Commands (all write into / read from one working directory, called WORK below):
   parse   FILE --out WORK        WhatsApp .txt/.zip or Telegram result.json -> WORK/chat.jsonl + WORK/meta.json
-  swap    WORK                   flip which participant is "me" in meta.json
-  periods WORK [--budget N]      split the two main participants' messages into reader periods -> WORK/periods/period_NN.txt
+  setme   WORK NAME              set which participant is "me" (exact sender name, or "none" for a group read from outside)
+  swap    WORK                   two-person chats only: flip "me" and "other"
+  periods WORK [--budget N]      split the analysed messages into reader periods -> WORK/periods/period_NN.txt
   search  WORK "a|b|c"           substring search over the whole chat, with context
   range   WORK FROM TO           every message between two dates (YYYY-MM-DD, inclusive)
   digest  WORK                   merge WORK/readers/period_NN.json into WORK/digest.md
@@ -114,8 +115,13 @@ def norm(s):
     return re.sub(r'[^\w]+', '', EMOJI.sub('', str(s)).lower())
 
 
-def guess_me(people, youdel, hint):
+def guess_me(people, youdel, hint, mode='pair'):
     two = people[:2]
+    if mode == 'group':
+        for p in people:
+            if youdel.get(p):
+                return p, '"you deleted this message" lines belong to the exporter'
+        return None, None
     if hint:
         cand = re.sub(r'\.(txt|zip|json)$', '', hint, flags=re.I)
         cand = norm(re.sub(r"whatsapp|chat|צ['׳]?אט|ווטסאפ|וואטסאפ|with|עם|\(\d+\)", ' ', cand, flags=re.I))
@@ -137,10 +143,11 @@ def line(m):
 
 
 def read_chat(work):
+    """Messages under analysis: the two main writers in a pair chat, every listed participant in a group."""
     meta = json.load(open(os.path.join(work, 'meta.json'), encoding='utf-8'))
     msgs = [json.loads(l) for l in open(os.path.join(work, 'chat.jsonl'), encoding='utf-8')]
-    pair = [m for m in msgs if m['s'] in (meta['me'], meta['other'])]
-    return meta, pair
+    keep = set(meta['participants'])
+    return meta, [m for m in msgs if m['s'] in keep]
 
 
 def cmd_parse(a):
@@ -160,22 +167,50 @@ def cmd_parse(a):
     people = sorted(counts, key=lambda p: -counts[p])
     if len(people) < 2:
         sys.exit('only one participant found')
-    me, why = guess_me(people, youdel, hint)
-    other = next(p for p in people[:2] if p != me)
+    # a group = three or more people who each wrote a real share of the chat
+    active = [p for p in people if counts[p] >= max(5, 0.02 * len(msgs))]
+    mode = 'group' if len(active) >= 3 else 'pair'
+    me, why = guess_me(people, youdel, hint, mode)
+    if mode == 'pair':
+        other = next(p for p in people[:2] if p != me)
+        participants = [me, other]
+    else:
+        other, participants = None, active
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, 'chat.jsonl'), 'w', encoding='utf-8') as f:
         for m in msgs:
             f.write(json.dumps(m, ensure_ascii=False) + '\n')
-    meta = {'me': me, 'other': other, 'me_sure': bool(why), 'me_reason': why or 'guessed: most messages', 'people': people,
+    meta = {'mode': mode, 'me': me, 'other': other, 'participants': participants,
+            'me_sure': bool(why), 'me_reason': why or ('unknown: ask which name is theirs' if mode == 'group' else 'guessed: most messages'), 'people': people,
             'counts': counts, 'first': msgs[0]['t'], 'last': msgs[-1]['t'], 'messages': len(msgs), 'source_hint': hint}
     json.dump(meta, open(os.path.join(a.out, 'meta.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(json.dumps(meta, ensure_ascii=False, indent=1))
 
 
+def cmd_setme(a):
+    p = os.path.join(a.work, 'meta.json')
+    meta = json.load(open(p, encoding='utf-8'))
+    name = None if a.name.lower() == 'none' else a.name
+    if name is not None and name not in meta['people']:
+        sys.exit('no such sender. senders: ' + ', '.join(meta['people']))
+    meta['me'] = name
+    if meta['mode'] == 'pair':
+        meta['other'] = next(x for x in meta['people'][:2] if x != name) if name in meta['people'][:2] else meta['other']
+        meta['participants'] = [meta['me'], meta['other']]
+    elif name and name not in meta['participants']:
+        meta['participants'].append(name)
+    meta['me_sure'], meta['me_reason'] = True, 'confirmed by the user'
+    json.dump(meta, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print(f"me = {meta['me']}, participants = {', '.join(meta['participants'])}")
+
+
 def cmd_swap(a):
     p = os.path.join(a.work, 'meta.json')
     meta = json.load(open(p, encoding='utf-8'))
+    if meta.get('mode') == 'group':
+        sys.exit('swap is for two-person chats; use setme in a group')
     meta['me'], meta['other'] = meta['other'], meta['me']
+    meta['participants'] = [meta['me'], meta['other']]
     meta['me_sure'], meta['me_reason'] = True, 'confirmed by the user'
     json.dump(meta, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(f"me = {meta['me']}, other = {meta['other']}")
@@ -242,8 +277,9 @@ def cmd_range(a):
 def cmd_digest(a):
     files = sorted(glob.glob(os.path.join(a.work, 'readers', 'period_*.json')))
     meta = json.load(open(os.path.join(a.work, 'meta.json'), encoding='utf-8'))
-    out = []
     q = lambda s: f' «{s}»' if s else ''
+    who = {'me': meta.get('me') or 'me', 'other': meta.get('other') or 'other'}
+    out = []
     for f in files:
         try:
             x = json.load(open(f, encoding='utf-8'))
@@ -251,17 +287,21 @@ def cmd_digest(a):
             out.append(f'### {os.path.basename(f)}\n(could not read: {e})'); continue
         L = [f"### {x.get('period', os.path.basename(f))}", f"summary: {x.get('summary', '')}", f"tone: {x.get('tone', '')}"]
         if x.get('themes'): L.append('themes: ' + ', '.join(map(str, x['themes'])))
+        for r in x.get('roles', []): L.append(f"- role {r.get('who', '')}: {r.get('role', '')}{q(r.get('quote'))}")
         for e in x.get('events', []): L.append(f"- event {e.get('date', '')}: {e.get('what', '')}{q(e.get('quote'))}")
-        for c in x.get('conflicts', []): L.append(f"- conflict {c.get('date', '')}: {c.get('trigger', '')} | underneath: {c.get('underneath', '')} | escalated: {c.get('who_escalated', '')} | ended: {c.get('how_ended', '')}{q(c.get('quote'))}")
+        for c in x.get('conflicts', []):
+            L.append(f"- conflict {c.get('date', '')}" + (f" [{c['between']}]" if c.get('between') else '') +
+                     f": {c.get('trigger', '')} | underneath: {c.get('underneath', '')} | escalated: {c.get('who_escalated', '')} | ended: {c.get('how_ended', '')}{q(c.get('quote'))}")
         n = x.get('needs') or {}
-        if n: L.append(f"needs: {meta['me']}: {n.get('me', '')}; {meta['other']}: {n.get('other', '')}")
-        if x.get('dynamics'): L.append(f"dynamics: {x['dynamics']}")
+        if n: L.append(f"needs: {who['me']}: {n.get('me', '')}; {who['other']}: {n.get('other', '')}")
+        for k, label in (('dynamics', 'dynamics'), ('alliances', 'alliances'), ('left_out', 'left out'), ('me_in_group', 'the user in this period'), ('unsaid', 'unsaid')):
+            if x.get(k): L.append(f"{label}: {x[k]}")
+        for j in x.get('inside_jokes', []): L.append(f"- inside joke: {j.get('what', '')}{q(j.get('quote'))}")
         for r in x.get('red_flags', []): L.append(f"- warning sign {r.get('date', '')}: {r.get('what', '')}{q(r.get('quote'))}")
-        if x.get('unsaid'): L.append(f"unsaid: {x['unsaid']}")
         b = x.get('best_moment') or {}
         if b.get('quote'): L.append(f"best moment {b.get('date', '')}:{q(b.get('quote'))}")
         nm = x.get('names') or {}
-        if nm: L.append(f"names used: {meta['me']} → {nm.get('me', '')}; {meta['other']} → {nm.get('other', '')}; gender: {x.get('gender', {})}")
+        if nm: L.append('names used: ' + '; '.join(f'{k} → {v}' for k, v in nm.items() if v) + (f"; gender: {x['gender']}" if x.get('gender') else ''))
         out.append('\n'.join(L))
     p = os.path.join(a.work, 'digest.md')
     open(p, 'w', encoding='utf-8').write('\n\n'.join(out) + '\n')
@@ -272,6 +312,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest='cmd', required=True)
     p = sp.add_parser('parse'); p.add_argument('file'); p.add_argument('--out', required=True); p.set_defaults(f=cmd_parse)
+    p = sp.add_parser('setme'); p.add_argument('work'); p.add_argument('name'); p.set_defaults(f=cmd_setme)
     p = sp.add_parser('swap'); p.add_argument('work'); p.set_defaults(f=cmd_swap)
     p = sp.add_parser('periods'); p.add_argument('work'); p.add_argument('--budget', type=int, default=36000); p.add_argument('--max', type=int, default=10); p.set_defaults(f=cmd_periods)
     p = sp.add_parser('search'); p.add_argument('work'); p.add_argument('query'); p.add_argument('--limit', type=int, default=20); p.add_argument('--context', type=int, default=2); p.set_defaults(f=cmd_search)
